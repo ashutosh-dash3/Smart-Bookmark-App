@@ -2,11 +2,26 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://your-render-backend-url.onrender.com/api/$1"
+      "destination": "https://smart-bookmark-app-cune.onrender.com/api/$1"
     },
     {
       "source": "/(.*)",
       "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Credentials",
+          "value": "true"
+        }
+      ]
     }
   ]
 }
