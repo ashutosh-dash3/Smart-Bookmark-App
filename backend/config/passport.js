@@ -16,17 +16,19 @@ passport.deserializeUser(async (id, done) => {
 });
 
 // Only configure Google Strategy if credentials are provided
-console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
-console.log('GOOGLE_CLIENT_SECRET exists:', !!process.env.GOOGLE_CLIENT_SECRET);
-
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET &&
     !process.env.GOOGLE_CLIENT_ID.includes('your_google_client_id')) {
+  
+  const callbackURL = process.env.NODE_ENV === 'production' 
+    ? `${process.env.SERVER_URL}/api/auth/google/callback`
+    : '/api/auth/google/callback';
+  
   passport.use(
     new GoogleStrategy(
       {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: '/api/auth/google/callback',
+        callbackURL: callbackURL,
       },
       async (accessToken, refreshToken, profile, done) => {
         try {

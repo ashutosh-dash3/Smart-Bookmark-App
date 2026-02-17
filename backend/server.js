@@ -10,8 +10,6 @@ const __dirname = path.dirname(__filename);
 const envPath = path.join(__dirname, '.env');
 if (fs.existsSync(envPath)) {
   dotenv.config({ path: envPath });
-  console.log('Environment loaded from:', envPath);
-  console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID?.substring(0, 20) + '...');
 }
 
 // Now import other modules that depend on env vars
@@ -25,9 +23,13 @@ import { Server } from 'socket.io';
 
 const app = express();
 const httpServer = createServer(app);
+
+// CORS configuration for production
+const corsOrigin = process.env.CLIENT_URL || 'http://localhost:5173';
+
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: corsOrigin,
     credentials: true
   }
 });
@@ -35,7 +37,7 @@ const io = new Server(httpServer, {
 app.set('io', io);
 
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: corsOrigin,
   credentials: true
 }));
 
