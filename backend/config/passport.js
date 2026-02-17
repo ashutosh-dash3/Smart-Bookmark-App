@@ -2,10 +2,19 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import User from '../models/User.js';
 
+/**
+ * Passport Configuration
+ * 
+ * This module configures Google OAuth authentication.
+ * Environment variables are validated in server.js before this module loads.
+ */
+
+// Serialize user ID to session
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
 
+// Deserialize user from session
 passport.deserializeUser(async (id, done) => {
   try {
     const user = await User.findById(id);
@@ -15,45 +24,48 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
-// Only configure Google Strategy if credentials are provided
-if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET &&
-    !process.env.GOOGLE_CLIENT_ID.includes('your_google_client_id')) {
-  
-  const callbackURL = process.env.NODE_ENV === 'production' 
-    ? `${process.env.SERVER_URL}/api/auth/google/callback`
-    : '/api/auth/google/callback';
-  
+// Configure Google OAuth Strategy
+const configureGoogleStrategy = () => {
+  // Determine callback URL based on environment
+  const callbackURL = process.env.NODE_ENV === 'production'
+    ? `${process.env.SERVER_URL || process.env.RENDER_EXTERNAL_URL}/api/auth/google/callback`
+    : 'http://localhost:5000/api/auth/google/callback';
+
   passport.use(
     new GoogleStrategy(
       {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
         callbackURL: callbackURL,
+        proxy: true // Trust proxy for HTTPS
       },
       async (accessToken, refreshToken, profile, done) => {
         try {
+          // Find or create user
           let user = await User.findOne({ googleId: profile.id });
 
           if (!user) {
             user = new User({
               googleId: profile.id,
-              email: profile.emails[0].value,
+              email: profile.emails?.[0]?.value,
               displayName: profile.displayName,
-              photo: profile.photos[0]?.value,
+              photo: profile.photos?.[0]?.value,
             });
             await user.save();
           }
 
-          done(null, user);
+          return done(null, user);
         } catch (error) {
-          done(error, null);
+          return done(error, null);
         }
       }
     )
   );
-} else {
-  console.warn('⚠️  Google OAuth credentials not configured. Authentication will not work.');
-  console.warn('   Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your .env file');
+};
+
+// Initialize strategy if credentials are available
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  configureGoogleStrategy();
 }
 
 export default passport;
