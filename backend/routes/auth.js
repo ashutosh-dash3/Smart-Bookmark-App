@@ -23,10 +23,22 @@ router.get('/google/callback', (req, res, next) => {
       error: 'Google OAuth not configured' 
     });
   }
+  
+  console.log('🔑 OAuth callback received, authenticating...');
+  
   passport.authenticate('google', {
-    failureRedirect: `${process.env.CLIENT_URL}/login`
-  })(req, res, next);
+    failureRedirect: `${process.env.CLIENT_URL}/login`,
+    failureMessage: true
+  })(req, res, (err) => {
+    if (err) {
+      console.error('❌ OAuth authentication error:', err);
+      return next(err);
+    }
+    next();
+  });
 }, (req, res) => {
+  console.log('✅ OAuth successful, user:', req.user?.displayName);
+  console.log('🍪 Session ID:', req.sessionID);
   res.redirect(process.env.CLIENT_URL);
 });
 

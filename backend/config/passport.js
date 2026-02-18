@@ -26,10 +26,12 @@ passport.deserializeUser(async (id, done) => {
 
 // Configure Google OAuth Strategy
 const configureGoogleStrategy = () => {
-  // Determine callback URL based on environment
-  const callbackURL = process.env.NODE_ENV === 'production'
-    ? `${process.env.SERVER_URL || process.env.RENDER_EXTERNAL_URL}/api/auth/google/callback`
-    : 'http://localhost:5000/api/auth/google/callback';
+  // Google OAuth callback URL - must be absolute
+  // In production, use the deployed Render URL
+  const callbackURL = process.env.GOOGLE_CALLBACK_URL || 
+    'http://localhost:5000/api/auth/google/callback';
+
+  console.log('🔐 Google OAuth Callback URL:', callbackURL);
 
   passport.use(
     new GoogleStrategy(
