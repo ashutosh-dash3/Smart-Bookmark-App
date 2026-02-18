@@ -46,6 +46,9 @@ const { default: bookmarkRoutes } = await import('./routes/bookmarks.js');
 const app = express();
 const httpServer = createServer(app);
 
+// Trust proxy for Render (required for secure cookies behind proxy)
+app.set('trust proxy', 1);
+
 // CORS configuration
 const corsOptions = {
   origin: process.env.CLIENT_URL,
@@ -86,6 +89,7 @@ const connectDB = async (retries = 5) => {
 await connectDB();
 
 // Session configuration with MongoDB store
+// Cross-origin cookie settings for production (Vercel + Render)
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
@@ -96,10 +100,10 @@ app.use(session({
     autoRemove: 'native'
   }),
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: true, // Always true for cross-origin production
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    sameSite: 'none', // Required for cross-origin cookies
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
 
