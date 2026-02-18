@@ -49,15 +49,19 @@ const httpServer = createServer(app);
 // Trust proxy for Render (required for secure cookies behind proxy)
 app.set('trust proxy', 1);
 
-// CORS configuration
+// CORS configuration - normalize CLIENT_URL to remove trailing slash
+const normalizeUrl = (url) => url ? url.replace(/\/$/, '') : url;
+const clientUrl = normalizeUrl(process.env.CLIENT_URL);
+
 const corsOptions = {
-  origin: process.env.CLIENT_URL,
+  origin: clientUrl,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 };
 
 app.use(cors(corsOptions));
+console.log('🔗 CORS configured for:', clientUrl);
 app.use(express.json());
 
 // MongoDB Connection with retry logic
