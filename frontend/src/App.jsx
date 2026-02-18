@@ -27,11 +27,13 @@ function App() {
 
   const checkAuth = async () => {
     try {
+      console.log('🔍 Checking auth status...');
       const response = await api.get('/auth/me');
+      console.log('✅ Auth response:', response.data);
       setIsAuthenticated(response.data.isAuthenticated);
       setUser(response.data.user);
     } catch (error) {
-      console.error('Auth check failed:', error);
+      console.error('❌ Auth check failed:', error);
     } finally {
       setLoading(false);
     }
